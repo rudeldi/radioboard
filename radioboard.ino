@@ -69,7 +69,7 @@ void setup()
   pinMode(volButtonplus, INPUT);
   pinMode(volButtonminu, INPUT);
   
-  radio.setVolume(2); //momentan keine Funktion
+  //radio.setVolume(2); //momentan keine Funktion
   
 }
 
@@ -77,11 +77,9 @@ void loop()
 {
   digitalWrite(status_led ,LOW);
   AnVal = analogRead(A3); //Poti wird ausgelesen
-  //NewFreq = double(maps(AnVal, 0, 862, 89.0, 104.6)); //Mapping wird durchgeführt, Analoger Wert auf die Frequenz umgerechnet
-  //radio.setFrequency(NewFreq); //Frequenz wird gesetzt
-  int freak = 8900;
-  radio.setFrequency(freak);
-  show_frequenz(freak); //Neue Frequenz wird auf dem Display dargestellt
+  NewFreq = map(AnVal, 0, 862, 8900, 10460); //Mapping wird durchgeführt, Analoger Wert auf die Frequenz umgerechnet
+  radio.setFrequency(NewFreq); //Frequenz wird gesetzt
+  show_frequenz(NewFreq); //Neue Frequenz wird auf dem Display dargestellt
   
   Serial.println(AnVal);
   //delay(500);
