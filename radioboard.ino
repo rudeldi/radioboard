@@ -77,7 +77,7 @@ void loop()
 {
   digitalWrite(status_led ,LOW);
   AnVal = analogRead(A3); //Poti wird ausgelesen
-  NewFreq = maps(AnVal, 0, 862, 8900, 10460); //Mapping wird durchgeführt, Analoger Wert auf die Frequenz umgerechnet
+  NewFreq = map(AnVal, 0, 862, 8900, 10460); //Mapping wird durchgeführt, Analoger Wert auf die Frequenz umgerechnet
   radio.setFrequency(NewFreq); //Frequenz wird gesetzt
   show_frequenz(NewFreq); //Neue Frequenz wird auf dem Display dargestellt
   
