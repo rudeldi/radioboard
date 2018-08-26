@@ -38,14 +38,14 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
  
 //Radio Deklarierung
 TEA5767 radio = TEA5767();
-float AnVal ;
-float NewFreq ;
+int AnVal ;
+int NewFreq ;
 
 //Zusatz ini
 int status_led = 7;
 
-const int volButtonplus = 2;
-const int volButtonminu = 3;
+const int volButtonplus = 3;
+const int volButtonminu = 2;
 
 void setup()
 { 
