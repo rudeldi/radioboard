@@ -1,11 +1,21 @@
-// TEA5767 Example
+
+/* Steuerung für das Radioboard der Maker Community Braunschweig
+ * 
+ * Autoren: Rudolf Leue
+ *          Martin Dehmel
+ *          
+ * Stand: 26.09.2018
+ * 
+ */
+
+// Bibliotheken einbinden
 #include <SPI.h>
 #include <Wire.h>
-#include <TEA5767Radio.h>
+#include <TEA5767.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-//Display initialisierung
+//Display initialisieren
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
 
@@ -37,15 +47,18 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
 
  
 //Radio Deklarierung
-TEA5767Radio radio = TEA5767Radio();
-int AnVal ;
-int NewFreq ;
+TEA5767 radio = TEA5767();
+int AnVal;
+int OldAnVal = 0;
+int NewFreq;
 
 //Zusatz ini
 int status_led = 7;
 
-const int volButtonplus = 3;
-const int volButtonminu = 2;
+// Lautstärketasten initialisieren
+#define VOLPLUS 3
+#define VOLMIN 2
+int volume = 0;
 
 void setup()
 { 
@@ -66,22 +79,12 @@ void setup()
 
   //Status LED Initialisieren
   pinMode(status_led,OUTPUT); 
-  pinMode(volButtonplus, INPUT);
-  pinMode(volButtonminu, INPUT);
+  pinMode(VOLPLUS, INPUT);
+  pinMode(VOLMIN, INPUT);
 
   //radio.setVolume(2); //momentan keine Funktion
 
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setTextSize(2);
-  display.setCursor(0,0);
-  display.println("Radio");
-  display.setTextSize(1);
-  display.setCursor(0,20);
-  display.println("MAKER COMMUNITY");
-  display.drawFastHLine(0, 30, 100, 1);
-  display.display();
-  delay(5000);
+  // main_menu();
   
 }
 
@@ -89,11 +92,20 @@ void loop()
 {
   digitalWrite(status_led ,LOW);
   AnVal = analogRead(A3); //Poti wird ausgelesen
-  NewFreq = map(AnVal, 0, 862, 8900, 10460); //Mapping wird durchgeführt, Analoger Wert auf die Frequenz umgerechnet
-  radio.setFrequency(NewFreq); //Frequenz wird gesetzt
-  show_frequenz(NewFreq); //Neue Frequenz wird auf dem Display dargestellt
+  if (OldAnVal != AnVal) {
+    NewFreq = map(AnVal, 0, 862, 8900, 10460);      // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
+    radio.setFrequency(NewFreq);                    // Frequenz wird gesetzt
+    update_display();                        // Neue Frequenz wird auf dem Display dargestellt
+    OldAnVal = AnVal;
+  }
   
-
+  if (digitalRead(VOLPLUS) == 0) {
+    volume_increase(5);
+  }
+  if (digitalRead(VOLMIN) == 0) {
+    volume_decrease(5);
+  }
+  
   //delay(500);
   //digitalWrite(status_led ,LOW);
   //delay(500);
@@ -107,13 +119,16 @@ float maps(float x, float in_min, float in_max, float out_min, float out_max)
 }
 
 //Displayanzeige der Frequenz
-void show_frequenz(float x){
-  x = x/100;
+void update_display(){
+  float x = (float)NewFreq/100;
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.setTextSize(2);
   display.setCursor(0,0);
   display.println(x);
+  display.drawRect(0, 25, 104, 6, 1);
+  display.drawFastHLine(2, 27, volume, 1);
+  display.drawFastHLine(2, 28, volume, 1);
   display.display();
 }
 
@@ -126,6 +141,40 @@ void drawchar(char* text, int size, int xpos, int ypos) {
   delay(1);
 }
 
-void volume_set(){
+void main_menu() {
+
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(2);
+  display.setCursor(0,0);
+  display.println("Radio");
+  display.setTextSize(1);
+  display.setCursor(0,20);
+  display.println("MAKER COMMUNITY");
+  display.drawFastHLine(0, 30, 100, 1);
+  display.display();
+  delay(2000);
   
+}
+
+void volume_increase(int steps) {
+  if (volume + steps > 100) {
+  volume = 100;
+  } else {
+    volume += steps;
+  }
+  Serial.println("VOL +");
+  update_display();
+  delay(50);
+}
+
+void volume_decrease(int steps) {
+  if (volume - steps < 0) {
+    volume = 0;
+  } else {
+    volume -= steps;
+  }
+  Serial.println("VOL -");
+  update_display();
+  delay(50);
 }
