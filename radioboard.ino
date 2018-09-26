@@ -1,7 +1,7 @@
 // TEA5767 Example
 #include <SPI.h>
 #include <Wire.h>
-#include <TEA5767.h>
+#include <TEA5767Radio.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
@@ -37,7 +37,7 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
 
  
 //Radio Deklarierung
-TEA5767 radio = TEA5767();
+TEA5767Radio radio = TEA5767Radio();
 int AnVal ;
 int NewFreq ;
 
@@ -53,7 +53,7 @@ void setup()
   Serial.begin(9600);          //  setup serial
   Wire.begin();
   delay(100);
-  radio.init();
+  // radio.init();
 
   Serial.println("i2c Bus initialisiert...");
   
@@ -68,8 +68,20 @@ void setup()
   pinMode(status_led,OUTPUT); 
   pinMode(volButtonplus, INPUT);
   pinMode(volButtonminu, INPUT);
-  
+
   //radio.setVolume(2); //momentan keine Funktion
+
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(2);
+  display.setCursor(0,0);
+  display.println("Radio");
+  display.setTextSize(1);
+  display.setCursor(0,20);
+  display.println("MAKER COMMUNITY");
+  display.drawFastHLine(0, 30, 100, 1);
+  display.display();
+  delay(5000);
   
 }
 
@@ -81,7 +93,7 @@ void loop()
   radio.setFrequency(NewFreq); //Frequenz wird gesetzt
   show_frequenz(NewFreq); //Neue Frequenz wird auf dem Display dargestellt
   
-  Serial.println(AnVal);
+
   //delay(500);
   //digitalWrite(status_led ,LOW);
   //delay(500);
@@ -99,13 +111,21 @@ void show_frequenz(float x){
   x = x/100;
   display.clearDisplay();
   display.setTextColor(WHITE);
-  display.setTextSize(4);
+  display.setTextSize(2);
   display.setCursor(0,0);
   display.println(x);
   display.display();
 }
 
+void drawchar(char* text, int size, int xpos, int ypos) {
+  display.setTextColor(WHITE);
+  display.setTextSize(size);
+  display.setCursor(xpos,ypos);
+  display.println(text);
+  display.display();
+  delay(1);
+}
+
 void volume_set(){
   
 }
-
