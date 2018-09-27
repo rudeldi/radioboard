@@ -14,6 +14,7 @@
 #include <TEA5767.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <EEPROM.h>
 
 //Display initialisieren
 #define OLED_RESET 4
@@ -59,6 +60,16 @@ int status_led = 7;
 #define VOLPLUS 3
 #define VOLMIN 2
 int volume = 0;
+const int max_vol = 15;
+const int min_vol = 0;
+
+ // Timer für "Delays" initialisieren
+unsigned long currentTime = millis();
+unsigned long previousVolChange = 0;
+
+// Senderliste für BS
+const int frequenzen[] = {8900, 8990, 9150, 9210, 9300, 9460, 9740, 9800, 9950, 10030, 10140, 10240, 10310, 10350, 10410, 10460, 10630, 10690, 10780};
+const char * sender[19] = {"89.0 RTL", "NDR Kult", "MDR JUMP", "NDR 2", "N-JOY", "MDR S-AN", "Dlf Kult", "NDR1 NDS", "NDR Info", "Radio38", "S A W", "ffn", "ffn", "Dlf", "Radio 21", "Okerwelle", "Antenne", "Antenne", "MDR Kult"};
 
 void setup()
 { 
@@ -82,28 +93,26 @@ void setup()
   pinMode(VOLPLUS, INPUT);
   pinMode(VOLMIN, INPUT);
 
-  //radio.setVolume(2); //momentan keine Funktion
-
   // main_menu();
-  
+
+  Serial.println(sender_check(8990));
 }
 
 void loop()
 {
   digitalWrite(status_led ,LOW);
   AnVal = analogRead(A3); //Poti wird ausgelesen
-  if (OldAnVal != AnVal) {
-    NewFreq = map(AnVal, 0, 862, 8900, 10460);      // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
-    radio.setFrequency(NewFreq);                    // Frequenz wird gesetzt
-    update_display();                        // Neue Frequenz wird auf dem Display dargestellt
-    OldAnVal = AnVal;
-  }
-  
+  Serial.println(AnVal);
+  NewFreq = map(AnVal, 0, 862, 8900, 10460);      // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
+  radio.setFrequency(NewFreq);                    // Frequenz wird gesetzt
+  update_display();                        // Neue Frequenz wird auf dem Display dargestellt
+  OldAnVal = AnVal;
+
   if (digitalRead(VOLPLUS) == 0) {
-    volume_increase(5);
+    volume_change(1);
   }
   if (digitalRead(VOLMIN) == 0) {
-    volume_decrease(5);
+    volume_change(-1);
   }
   
   //delay(500);
@@ -126,9 +135,21 @@ void update_display(){
   display.setTextSize(2);
   display.setCursor(0,0);
   display.println(x);
-  display.drawRect(0, 25, 104, 6, 1);
-  display.drawFastHLine(2, 27, volume, 1);
-  display.drawFastHLine(2, 28, volume, 1);
+  currentTime = millis();
+  if (currentTime < previousVolChange + 10000) {
+    display.drawRect(0, 25, 94, 6, 1);
+    display.drawFastHLine(2, 27, volume*6, 1);
+    display.drawFastHLine(2, 28, volume*6, 1);
+    display.setTextSize(1);
+    display.setCursor(102,23);
+    display.println(volume);
+  } else {
+    display.setTextSize(1);
+    display.setCursor(0,23);
+    display.println("Radio MAKER COMMUNITY");
+  }
+      
+  
   display.display();
 }
 
@@ -141,40 +162,33 @@ void drawchar(char* text, int size, int xpos, int ypos) {
   delay(1);
 }
 
-void main_menu() {
-
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setTextSize(2);
-  display.setCursor(0,0);
-  display.println("Radio");
-  display.setTextSize(1);
-  display.setCursor(0,20);
-  display.println("MAKER COMMUNITY");
-  display.drawFastHLine(0, 30, 100, 1);
-  display.display();
-  delay(2000);
+void volume_change(int steps) {
+  
+  currentTime = millis();                         // aktuelle Zeit auslesen
+  if (currentTime > previousVolChange + 200) {    // 200ms "Delay" sicherstellen
+    if (volume + steps > max_vol) {
+      volume = max_vol;                           // obere Grenze: VOL = 15
+    } else if (volume + steps < min_vol) {
+      volume = min_vol;                           // untere Grenze: VOL = 0
+    } else {
+      volume += steps;                            // Lautstärke anpassen
+    }
+    Serial.println("VOL");
+    update_display();
+    radio.setVolume(volume);                      //momentan keine Funktion
+    previousVolChange = currentTime;
+  } else {
+      // do nothing
+  }
   
 }
 
-void volume_increase(int steps) {
-  if (volume + steps > 100) {
-  volume = 100;
-  } else {
-    volume += steps;
+char * sender_check(int frequ) {
+  int stations = sizeof(sender);
+  for(int i = 1; i <= stations; i++) {
+    if (frequ == frequenzen[i]) {
+      return sender[i];
+    } 
   }
-  Serial.println("VOL +");
-  update_display();
-  delay(50);
-}
-
-void volume_decrease(int steps) {
-  if (volume - steps < 0) {
-    volume = 0;
-  } else {
-    volume -= steps;
-  }
-  Serial.println("VOL -");
-  update_display();
-  delay(50);
+  return "Kein Sender";
 }
