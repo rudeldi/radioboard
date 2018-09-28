@@ -67,10 +67,6 @@ const int min_vol = 0;
 unsigned long currentTime = millis();
 unsigned long previousVolChange = 0;
 
-// Senderliste für BS
-const int frequenzen[] = {8900, 8990, 9150, 9210, 9300, 9460, 9740, 9800, 9950, 10030, 10140, 10240, 10310, 10350, 10410, 10460, 10630, 10690, 10780};
-const char * sender[19] = {"89.0 RTL", "NDR Kult", "MDR JUMP", "NDR 2", "N-JOY", "MDR S-AN", "Dlf Kult", "NDR1 NDS", "NDR Info", "Radio38", "S A W", "ffn", "ffn", "Dlf", "Radio 21", "Okerwelle", "Antenne", "Antenne", "MDR Kult"};
-
 void setup()
 { 
   //Schnittstellen initialisieren
