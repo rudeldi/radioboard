@@ -1,4 +1,4 @@
-// Basic demo for accelerometer readings from Adafruit LIS3DH
+// Basic demo for tap/doubletap readings from Adafruit LIS3DH
 
 #include <Wire.h>
 #include <SPI.h>
@@ -24,13 +24,18 @@ Adafruit_LIS3DH lis = Adafruit_LIS3DH();
    #define Serial SerialUSB
 #endif
 
+// Adjust this number for the sensitivity of the 'click' force
+// this strongly depend on the range! for 16G, try 5-10
+// for 8G, try 10-20. for 4G try 20-40. for 2G try 40-80
+#define CLICKTHRESHHOLD 100
+
 void setup(void) {
 #ifndef ESP8266
   while (!Serial);     // will pause Zero, Leonardo, etc until serial console opens
 #endif
 
   Serial.begin(9600);
-  Serial.println("LIS3DH test!");
+    Serial.println("Adafruit LIS3DH Tap Test!");
   
   if (! lis.begin(0x19)) {   // change this to 0x19 for alternative i2c address
     Serial.println("Couldnt start");
@@ -38,41 +43,29 @@ void setup(void) {
   }
   Serial.println("LIS3DH found!");
   
-  lis.setRange(LIS3DH_RANGE_4_G);   // 2, 4, 8 or 16 G!
+  lis.setRange(LIS3DH_RANGE_2_G);   // 2, 4, 8 or 16 G!
   
   Serial.print("Range = "); Serial.print(2 << lis.getRange());  
   Serial.println("G");
+
+  // 0 = turn off click detection & interrupt
+  // 1 = single click only interrupt output
+  // 2 = double click only interrupt output, detect single click
+  // Adjust threshhold, higher numbers are less sensitive
+  lis.setClick(2, CLICKTHRESHHOLD);
+  delay(100);
 }
 
+
 void loop() {
-  lis.read();      // get X Y and Z data at once
-
-  /* Or....get a new sensor event, normalized */ 
-  sensors_event_t event; 
-  lis.getEvent(&event);
-
-  /* Calculate the magnitude of acceleration */
-  float ax = event.acceleration.x;
-  float ay = event.acceleration.y;
-  float az = event.acceleration.z;
-
-  float a = sqrt(pow(ax,2)+pow(ay,2)+pow(az,2));   
-  Serial.print(" \ta: "); Serial.print(a);   Serial.println(" m/s^2 ");
-
-  if (abs(a-10) > 20) {
-    Serial.println("Very big shake");
-  } else if (abs(a-10) > 15) {
-    Serial.println("Big shake");
-  } else if (abs(a-10) > 10) {
-    Serial.println("Medium shake");
-  } else if (abs(a-10) > 5) {
-    Serial.println("Small shake");
-  } else {
-    
-  }
-     
-
+  uint8_t click = lis.getClick();
+  if (click == 0) return;
+  if (! (click & 0x30)) return;
+  Serial.print("Click detected (0x"); Serial.print(click, HEX); Serial.print("): ");
+  if (click & 0x10) Serial.print(" single click");
+  if (click & 0x20) Serial.print(" double click");
   Serial.println();
- 
-  delay(200); 
+
+  delay(100);
+  return;
 }
