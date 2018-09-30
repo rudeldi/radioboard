@@ -129,12 +129,14 @@ void loop()
   NewFreq = map(AnVal, 0, 1023, 8900, 10800);      // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
   NewFreq = 5*round((float)NewFreq/5);
   radio.setFrequency(NewFreq);                    // Frequenz wird gesetzt
-  update_frequency();                        // Neue Frequenz wird auf dem Display dargestellt
-  OldAnVal = AnVal;
+  if (radio_mode == 1) {
+    update_frequency();                        // Neue Frequenz wird auf dem Display dargestellt
+  }
 
   // Laustärketasten checken
   if ((digitalRead(VOLPLUS) == 0) & (digitalRead(VOLMIN) == 0)) {
     radio_mode = 2;
+    update_display();
   } else if (digitalRead(VOLPLUS) == 0) {
     radio_mode = 1;
     volume_change(1);
@@ -240,10 +242,14 @@ void shake_detected() {
     display.println("Display \ngedimmt");
     display.dim(1);
     dim_status = 1;
+    delay(500);
+    update_display();
   } else if (dim_status == 1) {
     display.println("Display \nnormal");
     display.dim(0);
     dim_status = 0;
+    delay(500);
+    update_display();
   }
   display.display();
   delay(500);  
@@ -251,10 +257,6 @@ void shake_detected() {
 
 void start_display() {
   display.clearDisplay();
-  display.setTextSize(2);
-  display.setCursor(0,0);
-  display.println("Welcome");
   display.display();
-  delay(1000);
 }
 
