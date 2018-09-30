@@ -71,6 +71,9 @@ int status_led = 7;
 int volume = 0;
 const int max_vol = 15;
 const int min_vol = 0;
+int radio_mode = 1;
+int dim_status = 0;
+
 
  // Timer für "Delays" initialisieren
 unsigned long currentTime = millis();
@@ -121,20 +124,22 @@ void setup()
 void loop()
 {
   digitalWrite(status_led ,LOW);
-  AnVal = analogRead(A3); //Poti wird ausgelesen
+  AnVal = analogRead(A7); //Poti wird ausgelesen
   Serial.println(AnVal);
-  NewFreq = map(AnVal, 0, 862, 8900, 10460);      // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
-  NewFreq = 8900;
+  NewFreq = map(AnVal, 0, 1023, 8900, 10800);      // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
+  NewFreq = 5*round((float)NewFreq/5);
   radio.setFrequency(NewFreq);                    // Frequenz wird gesetzt
-  update_display();                        // Neue Frequenz wird auf dem Display dargestellt
+  update_frequency();                        // Neue Frequenz wird auf dem Display dargestellt
   OldAnVal = AnVal;
 
   // Laustärketasten checken
   if ((digitalRead(VOLPLUS) == 0) & (digitalRead(VOLMIN) == 0)) {
-    mute();
+    radio_mode = 2;
   } else if (digitalRead(VOLPLUS) == 0) {
+    radio_mode = 1;
     volume_change(1);
   } else if (digitalRead(VOLMIN) == 0) {
+    radio_mode = 1;
     volume_change(-1);
   }
   
@@ -163,26 +168,44 @@ float maps(float x, float in_min, float in_max, float out_min, float out_max)
 
 //Displayanzeige der Frequenz
 void update_display(){
-  float x = (float)NewFreq/100;
   display.clearDisplay();
-  display.setTextColor(WHITE);
+  if (radio_mode == 1) {
+    currentTime = millis();
+    float x = (float)NewFreq/100;  
+    display.setTextColor(WHITE);
+    display.setTextSize(2);
+    display.setCursor(0,0);
+    display.println(x);
+    if (currentTime < previousVolChange + 10000) {
+      display.drawRect(0, 25, 94, 6, 1);
+      display.drawFastHLine(2, 27, volume*6, 1);
+      display.drawFastHLine(2, 28, volume*6, 1);
+      display.setTextSize(1);
+      display.setCursor(102,23);
+      display.println(volume);
+    } else {
+      display.setTextSize(1);
+      display.setCursor(0,23);
+      display.println("Radio MAKER COMMUNITY");
+    }  
+  } else if (radio_mode == 2) {                    // Sendersuchlauf
+      display.setTextSize(2);
+      display.setCursor(0,0);
+      display.println("Suchlauf");
+      display.setTextSize(1);
+      display.setCursor(0,23);
+      display.println("> > > > > > > > > > > >");
+  }
+  display.display();
+}
+
+void update_frequency() {
+  float x = (float)NewFreq/100;
+  display.fillRect(0,0,100,20,0);
   display.setTextSize(2);
   display.setCursor(0,0);
   display.println(x);
-  currentTime = millis();
-  if (currentTime < previousVolChange + 10000) {
-    display.drawRect(0, 25, 94, 6, 1);
-    display.drawFastHLine(2, 27, volume*6, 1);
-    display.drawFastHLine(2, 28, volume*6, 1);
-    display.setTextSize(1);
-    display.setCursor(102,23);
-    display.println(volume);
-  } else {
-    display.setTextSize(1);
-    display.setCursor(0,23);
-    display.println("Radio MAKER COMMUNITY");
-  }  
-  display.display();
+  display.display();  
 }
 
 
@@ -209,19 +232,29 @@ void mute() {
   volume = 0;
   update_display();
 }
-
 void shake_detected() {
   display.clearDisplay();
   display.setTextSize(2);
   display.setCursor(0,0);
-  display.println("Shake \ndetected!");
+  if(dim_status == 0) {
+    display.println("Display \ngedimmt");
+    display.dim(1);
+    dim_status = 1;
+  } else if (dim_status == 1) {
+    display.println("Display \nnormal");
+    display.dim(0);
+    dim_status = 0;
+  }
   display.display();
-  delay(5000);  
+  delay(500);  
 }
 
 void start_display() {
-  display.drawBitmap(0, 0,  logo16_glcd_bmp, 16, 16, 1);
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0,0);
+  display.println("Welcome");
   display.display();
   delay(1000);
-  
 }
+
