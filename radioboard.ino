@@ -20,32 +20,7 @@
 
 //Display initialisieren
 #define OLED_RESET 4
-#define NUMFLAKES 10
-#define XPOS 0
-#define YPOS 1
-#define DELTAY 2
-#define LOGO16_GLCD_HEIGHT 16 
-#define LOGO16_GLCD_WIDTH  16 
 Adafruit_SSD1306 display(OLED_RESET);
-
-static const unsigned char PROGMEM logo16_glcd_bmp[] =
-{ B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111,
-  B11111111, B11111111  
-};
 
  
 //Radio-Chip initialisieren
@@ -56,13 +31,12 @@ int NewFreq;
 
 // Beschleunigungssensor initialisieren
 Adafruit_LIS3DH lis = Adafruit_LIS3DH();
-
 #if defined(ARDUINO_ARCH_SAMD)
 // for Zero, output on USB Serial console, remove line below if using programming port to program the Zero!
    #define Serial SerialUSB
 #endif
 
-//Zusatz ini
+//Status-LED initialisieren
 int status_led = 7;
 
 // Lautstärketasten initialisieren
@@ -87,7 +61,6 @@ void setup()
   Wire.begin();
   delay(100);
   radio.init();
-
   Serial.println("i2c Bus initialisiert...");
   delay(100);
   
@@ -95,7 +68,7 @@ void setup()
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   Serial.println("Display initialisiert...");
  
-  // Status-LED
+  // Pin Modes Lautstärketasten und Status LED
   pinMode(status_led,OUTPUT); 
   pinMode(VOLPLUS, INPUT);
   pinMode(VOLMIN, INPUT);
@@ -110,13 +83,11 @@ void setup()
     while (1);
   }
   Serial.println("LIS3DH found!");
-  
   lis.setRange(LIS3DH_RANGE_4_G);   // 2, 4, 8 or 16 G!
-  
   Serial.print("Range = "); Serial.print(2 << lis.getRange());  
   Serial.println("G");
 
-  // Startmenü
+  // Display löschen
   start_display();
 
 }
@@ -124,13 +95,13 @@ void setup()
 void loop()
 {
   digitalWrite(status_led ,LOW);
-  AnVal = analogRead(A7); //Poti wird ausgelesen
+  AnVal = analogRead(A7);                           //Poti wird ausgelesen
   Serial.println(AnVal);
-  NewFreq = map(AnVal, 0, 1023, 8900, 10800);      // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
-  NewFreq = 5*round((float)NewFreq/5);
-  radio.setFrequency(NewFreq);                    // Frequenz wird gesetzt
+  NewFreq = map(AnVal, 0, 1023, 8900, 10800);       // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
+  NewFreq = 5*round((float)NewFreq/5);              // Wert wird auf .05 gerundet
+  radio.setFrequency(NewFreq);                      // Frequenz wird gesetzt
   if (radio_mode == 1) {
-    update_frequency();                        // Neue Frequenz wird auf dem Display dargestellt
+    update_frequency();                             // Neue Frequenz wird auf dem Display dargestellt
   }
 
   // Laustärketasten checken
@@ -234,6 +205,7 @@ void mute() {
   volume = 0;
   update_display();
 }
+
 void shake_detected() {
   display.clearDisplay();
   display.setTextSize(2);
@@ -259,4 +231,3 @@ void start_display() {
   display.clearDisplay();
   display.display();
 }
-
