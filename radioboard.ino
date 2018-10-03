@@ -54,8 +54,13 @@ unsigned long currentTime = millis();
 unsigned long previousVolChange = 0;
 unsigned long previousShake = 0;
 
+// Audiochip Bytes
+byte x = 0xC0;
+byte y = 0x30;
+
 void setup()
 { 
+
   //Schnittstellen initialisieren
   Serial.begin(9600);          //  setup serial
   Wire.begin();
@@ -63,6 +68,19 @@ void setup()
   radio.init();
   Serial.println("i2c Bus initialisiert...");
   delay(100);
+
+  //Audiochip 
+  Wire.beginTransmission(0x60); // transmit to device #8
+  Wire.write(0x1);              // sends Register
+  Wire.write(x);              // sends one byte
+  Wire.endTransmission();     // stop transmitting
+
+  Wire.beginTransmission(0x60);
+  Wire.write(0x2);
+  Wire.write(y);
+  Wire.endTransmission();
+
+  delay(500);
   
   //Display initialisieren
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
