@@ -96,7 +96,7 @@ void setup()
   Serial.println("G");
 
   // Display löschen
-  start_display();
+  lautsprecher(10,10);
 
 }
 
@@ -157,7 +157,6 @@ void update_display(){
     display.setTextColor(WHITE);
     display.setTextSize(2);
     display.setCursor(0,0);
-    display.println(x);
     if (currentTime < previousVolChange + 10000) {
       display.drawRect(0, 25, 94, 6, 1);
       display.drawFastHLine(2, 27, volume*6, 1);
@@ -182,14 +181,13 @@ void update_display(){
 }
 
 void update_frequency() {
-  float x = (float)NewFreq/100;
+  float x = (float) NewFreq/100;
   display.fillRect(0,0,100,20,0);
   display.setTextSize(2);
   display.setCursor(0,0);
   display.println(x);
   display.display();  
 }
-
 
 void volume_change(int steps) {
   currentTime = millis();                         // aktuelle Zeit auslesen
@@ -249,3 +247,12 @@ void start_display() {
   display.display();
   delay(1000);
 }
+
+void lautsprecher(int xpos, int ypos) {
+  display.clearDisplay();
+  display.fillRect(10,10,10,10,1);
+  display.drawCircle(50,20,10,1);
+  display.display();
+  delay(5000);
+}
+
