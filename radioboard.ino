@@ -70,15 +70,10 @@ void setup()
   delay(100);
 
   //Audiochip 
-  Wire.beginTransmission(0x60); // transmit to device #8
-  Wire.write(0x1);              // sends Register
-  Wire.write(x);              // sends one byte
-  Wire.endTransmission();     // stop transmitting
-
-  Wire.beginTransmission(0x60);
-  Wire.write(0x2);
-  Wire.write(y);
-  Wire.endTransmission();
+  Wire.beginTransmission(0x60);     // transmit to device #8
+  Wire.write(0x1);                  // sends Register
+  Wire.write(x);                    // sends one byte
+  Wire.endTransmission();           // stop transmitting
 
   delay(500);
   
@@ -114,7 +109,7 @@ void loop()
 {
   digitalWrite(status_led ,LOW);
   AnVal = analogRead(A7);                           //Poti wird ausgelesen
-  Serial.println(AnVal);
+  //Serial.println(AnVal);
   NewFreq = map(AnVal, 0, 1023, 8900, 10800);       // Mapping wird durchgeführt, analoger Wert auf die Frequenz umgerechnet
   NewFreq = 5*round((float)NewFreq/5);              // Wert wird auf .05 gerundet
   radio.setFrequency(NewFreq);                      // Frequenz wird gesetzt
@@ -210,9 +205,16 @@ void volume_change(int steps) {
     } else {
       volume += steps;                            // Lautstärke anpassen
     }
-    Serial.println("VOL");
+    int vol64 = 4*volume;
+    byte reg2 = (byte) vol64;
+    Serial.println("VOL Change");
+    Serial.println(vol64);
+    Serial.println(reg2);
     update_display();
-    radio.setVolume(volume);                      //momentan keine Funktion
+    Wire.beginTransmission(0x60);         // i2c-Adresse des Audiochips (0x60)
+    Wire.write(0x2);                      // Register 2 auswählen
+    Wire.write(reg2);                     // Byte schreiben, dadurch Lautstärke setzen
+    Wire.endTransmission();
     previousVolChange = currentTime;
   } else {
       // do nothing
