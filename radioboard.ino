@@ -40,8 +40,8 @@ Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 int status_led = 7;
 
 // Lautstärketasten initialisieren
-#define VOLPLUS 3
-#define VOLMIN 2
+#define VOLPLUS 2
+#define VOLMIN 3
 int volume = 0;
 const int max_vol = 15;
 const int min_vol = 0;
