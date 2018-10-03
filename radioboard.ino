@@ -54,13 +54,8 @@ unsigned long currentTime = millis();
 unsigned long previousVolChange = 0;
 unsigned long previousShake = 0;
 
-// Audiochip Bytes
-byte x = 0xC0;
-byte y = 0x30;
-
 void setup()
 { 
-
   //Schnittstellen initialisieren
   Serial.begin(9600);          //  setup serial
   Wire.begin();
@@ -72,7 +67,7 @@ void setup()
   //Audiochip 
   Wire.beginTransmission(0x60);     // transmit to device #8
   Wire.write(0x1);                  // sends Register
-  Wire.write(x);                    // sends one byte
+  Wire.write(0xC0);                 // sends one byte
   Wire.endTransmission();           // stop transmitting
 
   delay(500);
@@ -115,8 +110,9 @@ void loop()
   radio.setFrequency(NewFreq);                      // Frequenz wird gesetzt
   if (radio_mode == 1) {
     update_frequency();                             // Neue Frequenz wird auf dem Display dargestellt
+  } else if (radio_mode == 2) {
+    update_display();
   }
-
   // Laustärketasten checken
   if ((digitalRead(VOLPLUS) == 0) & (digitalRead(VOLMIN) == 0)) {
     radio_mode = 2;
@@ -128,7 +124,7 @@ void loop()
     radio_mode = 1;
     volume_change(-1);
   }
-  
+
   // BS-Sensor auslesen
   lis.read();      // get X Y and Z data at once
     /* Or....get a new sensor event, normalized */ 
@@ -177,10 +173,10 @@ void update_display(){
   } else if (radio_mode == 2) {                    // Sendersuchlauf
       display.setTextSize(2);
       display.setCursor(0,0);
-      display.println("Suchlauf");
+      display.println("Shake Mode");
       display.setTextSize(1);
       display.setCursor(0,23);
-      display.println("> > > > > > > > > > > >");
+      display.println("Sendersuchlauf aktiv");
   }
   display.display();
 }
@@ -234,20 +230,22 @@ void shake_detected() {
     display.println("Display \ngedimmt");
     display.dim(1);
     dim_status = 1;
-    delay(500);
-    update_display();
+    display.display();
   } else if (dim_status == 1) {
-    display.println("Display \nnormal");
+    display.println("Display \nhell");
     display.dim(0);
     dim_status = 0;
-    delay(500);
-    update_display();
   }
   display.display();
-  delay(500);  
+  delay(800);
+  update_display();  
 }
 
 void start_display() {
   display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0,0);
+  display.println("Willkommen!");
   display.display();
+  delay(1000);
 }
